@@ -48,7 +48,11 @@ class BaseExperiment(object):
     def _get_data(self, dataloaders=None):
         if dataloaders is None:
             train_loader, vali_loader, test_loader = get_dataset(self.args.dataname, self.config)
-            '''need update2024'''
+        else:
+            train_loader, vali_loader, test_loader = dataloaders
+
+        vali_loader = test_loader if vali_loader is None else vali_loader
+        return BaseDataModule(train_loader, vali_loader, test_loader)
 
 
 
