@@ -25,6 +25,30 @@ class BaseExperiment(object):
         save_dir = osp.join(base_dir, args.ex_name if not args.ex_name.startswith(args.res_dir) else args.ex_name.split(args.res_dir+'/')[-1])
         ckpt_dir = osp.join(save_dir, 'checkpoints')
 
-
         seed_everything(args.seed)
+        self.data = self._get_data(dataloaders)
+        self.method = method_maps[self.args.method](steps_per_epoch=len(self.data.train_loader), test_mean=self.data.test_mean, test_std=self.data.test_std, save_dir=save_dir, **self.config)
+        callbacks, self.save_dir = self._load_callbacks(args, save_dir, ckpt_dir)
+        self.trainer = self._init_trainer(self.args, callbacks, strategy)
+
+    def _init_trainer(self, args, callbacks, strategy):
+        return Trainer(devices=args.gpus,
+                       max_epochs=args.epoch,
+                       strategy=strategy,
+                       accelerator='gpu',
+                       callbacks=callbacks)
+
+    def _load_callbacks(self, args, save_dir, ckpt_dir):
+        method_info = None
+        if self._dist == 0:
+            if not self.args.no_display_method_info:
+                method_info = self.display_method_info(args)
+                '''need update'''
+
+    def _get_data(self, dataloaders=None):
+        if dataloaders is None:
+            train_loader, vali_loader, test_loader = get_dataset(self.args.dataname, self.config)
+
+
+
 
